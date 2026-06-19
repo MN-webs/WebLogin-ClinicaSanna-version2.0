@@ -1,27 +1,14 @@
-# Fase 1: Compilación con Maven
-FROM maven:3.9.6-eclipse-temurin-17 AS build
-WORKDIR /app
-
-# Copiar la configuración
-COPY pom.xml .
-
-# Copiar las carpetas nativas de NetBeans
-COPY src/ ./src/
-COPY web/ ./web/
-
-# Compilar el proyecto
-RUN mvn clean package -DskipTests
-
-# Fase 2: Servidor Tomcat para correr la app
+# Usar directamente la imagen oficial de Tomcat 10.1 (basada en JDK 17)
 FROM tomcat:10.1-jdk17-temurin
 WORKDIR /usr/local/tomcat
 
-# Limpiar aplicaciones por defecto
+# Limpiar las aplicaciones de prueba que vienen por defecto en Tomcat
 RUN rm -rf webapps/*
 
-# Copiar el resultado final a la raíz de Tomcat
-COPY --from=build /app/target/ROOT.war webapps/ROOT.war
+# Copiar el archivo WAR que subiste a la raíz del servidor
+COPY ROOT.war webapps/ROOT.war
 
+# Exponer el puerto por defecto
 EXPOSE 8080
 
 CMD ["catalina.sh", "run"]
