@@ -1,27 +1,27 @@
-# 1. Fase de Compilación (Build) usando Maven
+# Fase 1: Compilación con Maven
 FROM maven:3.9.6-eclipse-temurin-17 AS build
 WORKDIR /app
 
-# Copiar los archivos de configuración y código fuente
+# Copiar configuración de dependencias
 COPY pom.xml .
-COPY src ./src
 
-# Compilar y empaquetar el archivo .war omitiendo los tests si existen
+# Copiar los códigos fuentes y páginas según la estructura de NetBeans
+COPY src/ ./src/
+COPY web/ ./web/
+
+# Ejecutar compilación limpia omitiendo pruebas
 RUN mvn clean package -DskipTests
 
-# 2. Fase de Ejecución usando Apache Tomcat 10.1
+# Fase 2: Servidor de Despliegue con Tomcat 10.1
 FROM tomcat:10.1-jdk17-temurin
 WORKDIR /usr/local/tomcat
 
-# Eliminar las aplicaciones por defecto de Tomcat para limpiar el contexto
+# Limpiar las aplicaciones de prueba por defecto de Tomcat
 RUN rm -rf webapps/*
 
-# Copiar el archivo WAR compilado desde la fase anterior y renombrarlo como ROOT.war
-# Esto hace que tu aplicación responda directamente en la raíz de la URL (/)
-COPY --from=build /app/target/*.war webapps/ROOT.war
+# Copiar el binario empaquetado directamente a la raíz del servidor web
+COPY --from=build /app/target/ROOT.war webapps/ROOT.war
 
-# Exponer el puerto por defecto de Tomcat
 EXPOSE 8080
 
-# Iniciar Tomcat
 CMD ["catalina.sh", "run"]
